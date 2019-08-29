@@ -17,7 +17,7 @@ describe('transport layer', () => {
 
     test('ping / pong', async (done) => {
         client.handle(data => {
-            expect(data ? data.toString() : new Error('invalid data')).toBe('pong');
+            expect(data.toString()).toBe('pong');
             done();
         });
         client.send('ping');
