@@ -2,24 +2,37 @@
 
 const ZeroMQ = require('../index');
 
-const server = new ZeroMQ('rep');
-server.connect(3000, '127.0.0.1', 'bind');
-server.handle(() => server.send('pong'));
+const client = new ZeroMQ({ log: 'fatal' });
+const server = new ZeroMQ({ server: true, log: 'fatal' });
 
-const client = new ZeroMQ('req');
-client.connect(3000, '127.0.0.1', 'connect');
+describe('zeromq transport layer', () => {
+    let payload = Date.now();
 
-describe('transport layer', () => {
-    afterAll(() => {
-        server.disconnect();
-        client.disconnect();
+    beforeAll(async done => {
+        await server.start(async () => {
+            return payload;
+        });
+        setTimeout(done, 1000);
     });
 
-    test('ping / pong', async (done) => {
-        client.handle(data => {
-            expect(data.toString()).toBe('pong');
+    afterAll(async done => {
+        client.stop();
+        server.stop();
+        await server._registry.releasePort(server._options.port);
+        await client._registry.releasePort(client._options.port);
+        setTimeout(() => {
+            client._registry.stop();
+            server._registry.stop();
+            done();
+        }, 1000);
+    });
+
+    test('ping / pong', async done => {
+        await client.start(async r => {
+            expect(r.d).toBe(payload);
             done();
         });
-        client.send('ping');
+        await client.send({ i: '127.0.0.1', p: server._options.port },
+            { i: '127.0.0.1', p: client._options.port, d: payload });
     });
 });
