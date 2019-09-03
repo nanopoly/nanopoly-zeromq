@@ -28,17 +28,23 @@ class Client extends Base {
                     pull.handle('error', e => this.logger.error(e));
                     pull.handle(p => this._onMessage(p));
                     pull.connect(msg.port, msg.ip, 'connect');
-                    this._pull[pull._address] = pull;
 
-                    const port = await portfinder.getPortPromise({ port: this._options.port });
-                    const push = new Socket('push');
-                    push.handle('error', e => this.logger.error(e));
-                    push.connect(port, this._ip, 'bindSync');
-                    this._push[push._address] = push;
+                    let push, port;
+                    try {
+                        port = await portfinder.getPortPromise({ port: this._options.port });
+                        push = new Socket('push');
+                        push.handle('error', e => this.logger.error(e));
+                        push.connect(port, this._ip, 'bindSync');
 
-                    this._pair[msg.id] = [ push._address, pull._address, Date.now() ];
-                    this._publisher.publish('client-push',
-                        JSON.stringify({ id: this._id, ip: this._ip, port, sock: push._id.split('/').pop(), address: pull._address }));
+                        this._push[push._address] = push;
+                        this._pull[pull._address] = pull;
+                        this._options.port = port;
+                        this._pair[msg.id] = [ push._address, pull._address, Date.now() ];
+                        this._publisher.publish('client-push', JSON.stringify({ id: this._id,
+                            ip: this._ip, port, sock: push._id.split('/').pop(), address: pull._address }));
+                    } catch (e) {
+                        this._logger.error(e);
+                    }
                 }
             } else if (status === 'ping') {
                 if (this._pair[msg.id]) this._pair[msg.id][2] = Date.now();
@@ -46,30 +52,26 @@ class Client extends Base {
         }
     }
 
-    async _onMessage(p) {
-        try {
-            const m = this._parseMessage(p);
-            const address = this._push[this._pair[m._][0]]._address;
-            if (m.e) {
-                this._logger.error(p, m.e);
-                await this.send(address, m);
-            } else this._handler(m).catch(async e => this._logger.error(p, e.message));
-        } catch (e) {
-            this._logger.error(p, e.message);
-        }
+    _onMessage(p) {
+        const m = this._parseMessage(p);
+        const address = this._push[this._pair[m._][0]]._address;
+        if (m.e) {
+            this._logger.error(p, m.e);
+            this.send(address, m);
+        } else this._handler(m).catch(async e => this._logger.error(p, e.message));
     }
 
-    async start(handler) {
+    start(handler) {
         if (is.not.function(handler) || handler.constructor.name !== 'AsyncFunction')
             throw new Error('handler must be an async function');
 
         this._handler = handler;
         this._subscriber.subscribe('server-ping');
         this._subscriber.subscribe('server-push');
-        this._subscriber.on('message', (channel, message) => {
+        this._subscriber.on('message', (ch, msg) => {
             try {
-                message = JSON.parse(message);
-                if (is.object(message)) this._onStateChange(channel.split('-').pop(), message, handler);
+                msg = JSON.parse(msg);
+                if (is.object(msg)) this._onStateChange(ch.split('-').pop(), msg, handler);
             } catch (e) {
                 this._logger.error(e);
             }

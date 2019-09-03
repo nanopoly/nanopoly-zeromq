@@ -20,27 +20,6 @@ class Server extends Base {
         super(options);
     }
 
-    async _onMessage(p) {
-        try {
-            const m = this._parseMessage(p);
-            const address = this._push[this._pair[m._][0]]._address;
-            if (m.e) {
-                this._logger.error(p, m.e);
-                await this.send(address, m);
-            } else {
-                this._handler(m).then(async r => {
-                    m.d = r;
-                    await this.send(address, m);
-                }).catch(async e => {
-                    m.e = e.message;
-                    await this.send(address, m);
-                });
-            }
-        } catch (e) {
-            this._logger.error(p, e.message);
-        }
-    }
-
     async _onStateChange(status, msg) {
         if (this._id !== msg.id) {
             if (status === 'push') {
@@ -57,6 +36,7 @@ class Server extends Base {
             } else {
                 if (!this._pair[msg.id]) {
                     const port = await portfinder.getPortPromise({ port: this._options.port });
+                    this._options.port = port;
                     const push = new Socket('push');
                     push.handle('error', e => this.logger.error(e));
                     push.connect(port, this._ip, 'bindSync');
@@ -68,7 +48,28 @@ class Server extends Base {
         }
     }
 
-    async start(handler) {
+    _onMessage(p) {
+        try {
+            const m = this._parseMessage(p);
+            const address = this._push[this._pair[m._][0]]._address;
+            if (m.e) {
+                this._logger.error(p, m.e);
+                this.send(address, m);
+            } else {
+                this._handler(m).then(async r => {
+                    m.d = r;
+                    this.send(address, m);
+                }).catch(async e => {
+                    m.e = e.message;
+                    this.send(address, m);
+                });
+            }
+        } catch (e) {
+            this._logger.error(p, e.message);
+        }
+    }
+
+    start(handler) {
         if (is.not.function(handler) || handler.constructor.name !== 'AsyncFunction')
             throw new Error('handler must be an async function');
 
@@ -76,10 +77,10 @@ class Server extends Base {
         this._subscriber.subscribe('client-init');
         this._subscriber.subscribe('client-ping');
         this._subscriber.subscribe('client-push');
-        this._subscriber.on('message', (channel, message) => {
+        this._subscriber.on('message', (ch, msg) => {
             try {
-                message = JSON.parse(message);
-                if (is.object(message)) this._onStateChange(channel.split('-').pop(), message, handler);
+                msg = JSON.parse(msg);
+                if (is.object(msg)) this._onStateChange(ch.split('-').pop(), msg, handler);
             } catch (e) {
                 this._logger.error(e);
             }
