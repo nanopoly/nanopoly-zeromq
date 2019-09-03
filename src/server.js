@@ -20,12 +20,24 @@ class Server extends Base {
         super(options);
     }
 
-    async _ping(id) {
-        if (is.array(this._pair[id])) {
-            const recent = this._pair[id][2];
-            let ping = is.number(this._options.ping) && this._options.ping > 0 ? this._options.ping : 15000;
-            if (Math.abs(Date.now() - recent) > ping)
-                this._publisher.publish('server-ping', JSON.stringify({ id: this._id }));
+    async _onMessage(p) {
+        try {
+            const m = this._parseMessage(p);
+            const address = this._push[this._pair[m._][0]]._address;
+            if (m.e) {
+                this._logger.error(p, m.e);
+                await this.send(address, m);
+            } else {
+                this._handler(m).then(async r => {
+                    m.d = r;
+                    await this.send(address, m);
+                }).catch(async e => {
+                    m.e = e.message;
+                    await this.send(address, m);
+                });
+            }
+        } catch (e) {
+            this._logger.error(p, e.message);
         }
     }
 
@@ -67,8 +79,7 @@ class Server extends Base {
         this._subscriber.on('message', (channel, message) => {
             try {
                 message = JSON.parse(message);
-                if (is.not.object(message)) throw new Error('invalid message');
-                this._onStateChange(channel.split('-').pop(), message, handler);
+                if (is.object(message)) this._onStateChange(channel.split('-').pop(), message, handler);
             } catch (e) {
                 this._logger.error(e);
             }
