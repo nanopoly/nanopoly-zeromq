@@ -46,6 +46,19 @@ class Client extends Base {
         }
     }
 
+    async _onMessage(p) {
+        try {
+            const m = this._parseMessage(p);
+            const address = this._push[this._pair[m._][0]]._address;
+            if (m.e) {
+                this._logger.error(p, m.e);
+                await this.send(address, m);
+            } else this._handler(m).catch(async e => this._logger.error(p, e.message));
+        } catch (e) {
+            this._logger.error(p, e.message);
+        }
+    }
+
     async start(handler) {
         if (is.not.function(handler) || handler.constructor.name !== 'AsyncFunction')
             throw new Error('handler must be an async function');
@@ -56,8 +69,7 @@ class Client extends Base {
         this._subscriber.on('message', (channel, message) => {
             try {
                 message = JSON.parse(message);
-                if (is.not.object(message)) throw new Error('invalid message');
-                this._onStateChange(channel.split('-').pop(), message, handler);
+                if (is.object(message)) this._onStateChange(channel.split('-').pop(), message, handler);
             } catch (e) {
                 this._logger.error(e);
             }
