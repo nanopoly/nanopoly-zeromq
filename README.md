@@ -58,12 +58,12 @@ nanopoly might ignore them.
 ```js
 const { Client, Server } = require('nanopoly-zeromq');
 
-const client = new Client({});
-const server = new Server({});
+const client = new Client({ log: 'debug' });
+const server = new Server({ log: 'debug' });
 
-await server.start(async () => payload);
-await client.start(async r => console.log(r));
-await client.send('127.0.0.1:8000', { d: 1 });
+server.start(async m => m.d);
+client.start(async r => console.log(r));
+client.send('127.0.0.1:8000', { d: 1 });
 
 client.stop();
 server.stop();
