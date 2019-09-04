@@ -18,6 +18,7 @@ class Server extends Base {
      */
     constructor(options) {
         super(options);
+        this._name = this.constructor.name.toLowerCase();
     }
 
     /**
@@ -30,26 +31,31 @@ class Server extends Base {
         if (this._id !== msg.id) {
             if (status === 'push') {
                 if (!this._pair[msg.id]) {
+                    this._logger.info(`push received from ${ msg.id }`, this._name, this._id);
                     const pull = new Socket('pull', msg.sock);
-                    pull.handle('error', e => this.logger.error(e));
+                    pull.handle('error', e => this.logger.error(e, this._name, this._id));
                     pull.handle(p => this._onMessage(p));
                     pull.connect(msg.port, msg.ip, 'connect');
                     this._pull[pull._address] = pull;
                     this._pair[msg.id] = [ msg.address, pull._address, Date.now() ];
-                }
+                } else this._logger.info(`${ msg.id } already paired`, this._name, this._id);
             } else if (status === 'ping') {
-                if (this._pair[msg.id]) this._pair[msg.id][2] = Date.now();
+                if (this._pair[msg.id]) {
+                    this._logger.info(`ping received from ${ msg.id }`, this._name, this._id);
+                    this._pair[msg.id][2] = Date.now();
+                } else this._logger.info(`${ msg.id } not paired`, this._name, this._id);
             } else {
                 if (!this._pair[msg.id]) {
+                    this._logger.info(`init received from ${ msg.id }`, this._name, this._id);
                     const port = await portfinder.getPortPromise({ port: this._options.port });
                     this._options.port = port;
                     const push = new Socket('push');
-                    push.handle('error', e => this.logger.error(e));
+                    push.handle('error', e => this.logger.error(e, this._name, this._id));
                     push.connect(port, this._ip, 'bindSync');
                     this._push[push._address] = push;
                     this._publisher.publish('server-push',
                         JSON.stringify({ id: this._id, ip: this._ip, port, sock: push._id.split('/').pop() }));
-                }
+                } else this._logger.info(`${ msg.id } already paired`, this._name, this._id);
             }
         }
     }
@@ -64,7 +70,7 @@ class Server extends Base {
             const m = this._parseMessage(p);
             const address = this._push[this._pair[m._][0]]._address;
             if (m.e) {
-                this._logger.error(p, m.e);
+                this._logger.error(p, m.e, this._name, this._id);
                 this.send(address, m);
             } else {
                 this._handler(m).then(async r => {
@@ -76,7 +82,7 @@ class Server extends Base {
                 });
             }
         } catch (e) {
-            this._logger.error(p, e.message);
+            this._logger.error(p, e.message, this._name, this._id);
         }
     }
 
@@ -98,7 +104,7 @@ class Server extends Base {
                 msg = JSON.parse(msg);
                 if (is.object(msg)) this._onStateChange(ch.split('-').pop(), msg, handler);
             } catch (e) {
-                this._logger.error(e);
+                this._logger.error(e, this._name, this._id);
             }
         });
     }
