@@ -20,6 +20,12 @@ class Server extends Base {
         super(options);
     }
 
+    /**
+     * @description handles pub/sub communication with clients
+     * @param {String} status subscription channel
+     * @param {String} msg published message
+     * @memberof Client
+     */
     async _onStateChange(status, msg) {
         if (this._id !== msg.id) {
             if (status === 'push') {
@@ -48,6 +54,11 @@ class Server extends Base {
         }
     }
 
+    /**
+     * @description handler for received messages
+     * @param {String} p message
+     * @memberof Client
+     */
     _onMessage(p) {
         try {
             const m = this._parseMessage(p);
@@ -69,6 +80,11 @@ class Server extends Base {
         }
     }
 
+    /**
+     * @description initiates pairing connections with clients
+     * @param {Function} handler message handler
+     * @memberof Client
+     */
     start(handler) {
         if (is.not.function(handler) || handler.constructor.name !== 'AsyncFunction')
             throw new Error('handler must be an async function');
