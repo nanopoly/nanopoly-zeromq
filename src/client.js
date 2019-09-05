@@ -70,8 +70,7 @@ class Client extends Base {
      */
     _onMessage(p) {
         const m = this._parseMessage(p);
-        if (m.e) this._logger.error(p, m.e, this._name, this._id);
-        else this._handler(m).catch(async e => this._logger.error(p, e.message, this._name, this._id));
+        this._handler(m).catch(async e => this._logger.error(p, e.message, this._name, this._id));
     }
 
     /**
