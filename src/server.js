@@ -34,7 +34,7 @@ class Server extends Base {
                     this._logger.info(`push received from ${ msg.id }`, this._name, this._id);
                     const pull = new Socket('pull', msg.sock);
                     pull.handle('error', e => this.logger.error(e, this._name, this._id));
-                    pull.handle(p => this._onMessage(p));
+                    pull.handle(p => this._onMessage(p.toString()));
                     pull.connect(msg.port, msg.ip, 'connect');
                     this._pull[pull._address] = pull;
                     this._pair[msg.id] = [ msg.address, pull._address, Date.now() ];
@@ -66,9 +66,10 @@ class Server extends Base {
      * @memberof Client
      */
     _onMessage(p) {
+        let m, address;
         try {
-            const m = this._parseMessage(p);
-            const address = this._push[this._pair[m._][0]]._address;
+            m = this._parseMessage(p);
+            address = this._push[this._pair[m._][0]]._address;
             if (m.e) {
                 this._logger.error(p, m.e, this._name, this._id);
                 this.send(address, m);
@@ -85,6 +86,10 @@ class Server extends Base {
             }
         } catch (e) {
             this._logger.error(p, e.message, this._name, this._id);
+            if (address) {
+                m.e = e.message;
+                this.send(address, m);
+            }
         }
     }
 

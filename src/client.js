@@ -34,7 +34,7 @@ class Client extends Base {
                     this._logger.info(`push received from ${ msg.id }`, this._name, this._id);
                     const pull = new Socket('pull', msg.sock);
                     pull.handle('error', e => this.logger.error(e, this._name, this._id));
-                    pull.handle(p => this._onMessage(p));
+                    pull.handle(p => this._onMessage(p.toString()));
                     pull.connect(msg.port, msg.ip, 'connect');
 
                     let push, port;
@@ -69,8 +69,8 @@ class Client extends Base {
      * @memberof Client
      */
     _onMessage(p) {
-        const m = this._parseMessage(p);
-        this._handler(m).catch(async e => this._logger.error(p, e.message, this._name, this._id));
+        this._handler(this._parseMessage(p))
+            .catch(async e => this._logger.error(p, e.message, this._name, this._id));
     }
 
     /**
