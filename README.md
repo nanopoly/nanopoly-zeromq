@@ -39,6 +39,7 @@ docker run -p 6379:6379 --name nanopoly_redis redis:4-alpine
 - **log         :** options for pino's log level. there is also an environment variable called LOG_LEVEL. it's error by default.
 - **ping        :** number of milliseconds for ping request. it's 10000 by default and you can't set a value lower than 3000.
 - **port        :** port number to start from.
+- **prefix      :** prefix to avoid confusion in subscribed channel names
 - **redis       :** options for redis client.
 
 ## Methods
