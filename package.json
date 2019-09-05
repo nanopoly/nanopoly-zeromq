@@ -1,6 +1,6 @@
 {
   "name": "nanopoly-zeromq",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "nanopoly plugin for zeromq transport",
   "main": "index.js",
   "scripts": {
