@@ -48,7 +48,7 @@ class Client extends Base {
                         this._pull[pull._address] = pull;
                         this._options.port = port;
                         this._pair[msg.id] = [ push._address, pull._address, Date.now() ];
-                        this._publisher.publish('client-push', JSON.stringify({ id: this._id,
+                        this._publisher.publish(this._channel('client-push'), JSON.stringify({ id: this._id,
                             ip: this._ip, port, sock: push._id.split('/').pop(), address: pull._address }));
                     } catch (e) {
                         this._logger.error(e, this._name, this._id);
@@ -87,8 +87,8 @@ class Client extends Base {
             throw new Error('handler must be an async function');
 
         this._handler = handler;
-        this._subscriber.subscribe('server-ping');
-        this._subscriber.subscribe('server-push');
+        this._subscriber.subscribe(this._channel('server-ping'));
+        this._subscriber.subscribe(this._channel('server-push'));
         this._subscriber.on('message', (ch, msg) => {
             try {
                 msg = JSON.parse(msg);
@@ -97,7 +97,7 @@ class Client extends Base {
                 this._logger.error(e, this._name, this._id);
             }
         });
-        this._publisher.publish('client-init', JSON.stringify({ id: this._id, ip: this._ip }));
+        this._publisher.publish(this._channel('client-init'), JSON.stringify({ id: this._id, ip: this._ip }));
     }
 }
 

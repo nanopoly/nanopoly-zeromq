@@ -53,7 +53,7 @@ class Server extends Base {
                     push.handle('error', e => this.logger.error(e, this._name, this._id));
                     push.connect(port, this._ip, 'bindSync');
                     this._push[push._address] = push;
-                    this._publisher.publish('server-push',
+                    this._publisher.publish(this._channel('server-push'),
                         JSON.stringify({ id: this._id, ip: this._ip, port, sock: push._id.split('/').pop() }));
                 } else this._logger.info(`${ msg.id } already paired`, this._name, this._id);
             }
@@ -96,9 +96,9 @@ class Server extends Base {
             throw new Error('handler must be an async function');
 
         this._handler = handler;
-        this._subscriber.subscribe('client-init');
-        this._subscriber.subscribe('client-ping');
-        this._subscriber.subscribe('client-push');
+        this._subscriber.subscribe(this._channel('client-init'));
+        this._subscriber.subscribe(this._channel('client-ping'));
+        this._subscriber.subscribe(this._channel('client-push'));
         this._subscriber.on('message', (ch, msg) => {
             try {
                 msg = JSON.parse(msg);
