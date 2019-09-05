@@ -71,15 +71,10 @@ class Server extends Base {
             const address = this._push[this._pair[m._][0]]._address;
             if (m.e) {
                 this._logger.error(p, m.e, this._name, this._id);
-                this.send(address, m);
+                this.send(address, { id: m.id, e: m.e });
             } else {
-                this._handler(m).then(async r => {
-                    m.d = r;
-                    this.send(address, m);
-                }).catch(async e => {
-                    m.e = e.message;
-                    this.send(address, m);
-                });
+                this._handler(m).then(async r => this.send(address, { id: m.id, d: r }))
+                    .catch(async e => this.send(address, { id: m.id, e: e.message }));
             }
         } catch (e) {
             this._logger.error(p, e.message, this._name, this._id);

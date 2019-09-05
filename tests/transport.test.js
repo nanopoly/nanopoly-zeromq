@@ -11,7 +11,7 @@ describe('zeromq transport layer', () => {
     let payload = Date.now();
 
     beforeAll(done => {
-        server.start(async () => payload);
+        server.start(async m => m.d);
         setTimeout(done, 1000);
     });
 
