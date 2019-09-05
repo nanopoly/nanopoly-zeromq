@@ -1,7 +1,9 @@
 'use strict';
 
+const Base = require('../lib/base');
 const { Client, Server } = require('../index');
 
+const base = new Base({ prefix: 'a' });
 const client = new Client({ log: 'debug' });
 const server = new Server({ log: 'debug' });
 
@@ -14,6 +16,7 @@ describe('zeromq transport layer', () => {
     });
 
     afterAll(() => {
+        base.stop();
         client.stop();
         server.stop();
     });
@@ -33,5 +36,9 @@ describe('zeromq transport layer', () => {
     test('invalid address', async done => {
         expect(() => client.send('test', { d: payload })).toThrow();
         done();
+    });
+
+    test('invalid address', async () => {
+        expect(base._channel('b')).toBe('a-b');
     });
 });
