@@ -51,7 +51,7 @@ class Server extends Base {
                     this._options.port = port;
                     const push = new Socket('push');
                     push.handle('error', e => this.logger.error(e, this._name, this._id));
-                    push.connect(port, this._ip, 'bindSync');
+                    push.connect(port, this._ip, 'bind');
                     this._push[push._address] = push;
                     this._publisher.publish(this._channel('server-push'),
                         JSON.stringify({ id: this._id, ip: this._ip, port, sock: push._id.split('/').pop() }));

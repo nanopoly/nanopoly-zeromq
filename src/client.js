@@ -42,7 +42,7 @@ class Client extends Base {
                         port = await portfinder.getPortPromise({ port: this._options.port });
                         push = new Socket('push');
                         push.handle('error', e => this.logger.error(e, this._name, this._id));
-                        push.connect(port, this._ip, 'bindSync');
+                        push.connect(port, this._ip, 'bind');
 
                         this._push[push._address] = push;
                         this._pull[pull._address] = pull;
