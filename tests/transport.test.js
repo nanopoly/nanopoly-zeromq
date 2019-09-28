@@ -2,10 +2,11 @@
 
 const Base = require('../lib/base');
 const { Client, Server } = require('../index');
+const redis = require('redis-mock');
 
-const base = new Base({ prefix: 'a' });
-const client = new Client({ log: 'debug' });
-const server = new Server({ log: 'debug' });
+const base = new Base(null, null, { prefix: 'a' });
+const client = new Client(redis.createClient(), redis.createClient(), { log: 'debug' });
+const server = new Server(redis.createClient(), redis.createClient(), { log: 'debug' });
 
 describe('zeromq transport layer', () => {
     let payload = Date.now();
