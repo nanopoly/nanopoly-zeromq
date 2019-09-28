@@ -13,11 +13,13 @@ const Socket = require('../lib/socket');
 class Server extends Base {
     /**
      *Creates an instance of Server.
+     * @param {Object} publisher redis client to publish
+     * @param {Object} subscriber redis client to subscribe
      * @param {Object} options transport options
      * @memberof Server
      */
-    constructor(options) {
-        super(options);
+    constructor(publisher, subscriber, options) {
+        super(publisher, subscriber, options);
         this._name = this.constructor.name.toLowerCase();
     }
 
