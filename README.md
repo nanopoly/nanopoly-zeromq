@@ -58,9 +58,10 @@ nanopoly might ignore them.
 
 ```js
 const { Client, Server } = require('nanopoly-zeromq');
+const redis = require('redis');
 
-const client = new Client({ log: 'debug' });
-const server = new Server({ log: 'debug' });
+const client = new Client(redis.createClient(), redis.createClient(), { log: 'debug' });
+const server = new Server(redis.createClient(), redis.createClient(), { log: 'debug' });
 
 server.start(async m => m.d);
 client.start(async r => console.log(r));
