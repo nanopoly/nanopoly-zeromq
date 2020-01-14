@@ -1,6 +1,6 @@
 {
   "name": "nanopoly-zeromq",
-  "version": "0.3.0",
+  "version": "0.3.2",
   "description": "nanopoly plugin for zeromq transport",
   "main": "index.js",
   "scripts": {
@@ -32,19 +32,19 @@
   },
   "homepage": "https://github.com/nanopoly/nanopoly-zeromq#readme",
   "devDependencies": {
-    "eslint": "^6.3.0",
+    "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.0.0",
-    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-import": "^2.20.0",
     "jest": "^24.9.0",
-    "redis-mock": "^0.46.0"
+    "redis-mock": "^0.47.0"
   },
   "dependencies": {
     "ip": "^1.1.5",
     "is_js": "^0.9.0",
-    "pino": "^5.13.2",
-    "portfinder": "^1.0.23",
-    "shortid": "^2.2.14",
-    "zeromq": "^5.1.0"
+    "pino": "^5.16.0",
+    "portfinder": "^1.0.25",
+    "shortid": "^2.2.15",
+    "zeromq": "^5.2.0"
   },
   "jest": {
     "testEnvironment": "node"
